@@ -36,13 +36,13 @@ class TenderImport(models.Model):
         help='Institution to which the uploaded tenders belong'
     )
     
-    # File Upload
-    excel_file = fields.Binary(
-        string='Excel File',
-        help='Upload Excel file containing tender data'
+    # File Upload - Updated for multiple files
+    excel_files = fields.Many2many(
+        comodel_name='ir.attachment',
+        string='Excel Files',
+        help='Upload one or more Excel files. You can select multiple files at once.'
     )
-    filename = fields.Char(string='Filename')
-    
+
     # Import Configuration with Contact Information
     institution_name = fields.Char(
         string='Institution Name',
@@ -62,6 +62,7 @@ class TenderImport(models.Model):
     )
     
     # Import Results
+    file_count = fields.Integer(string='Files Processed', readonly=True, default=0)
     total_rows = fields.Integer(string='Total Rows', readonly=True)
     parsed_count = fields.Integer(string='Parsed Count', readonly=True)
     imported_count = fields.Integer(string='Import Count', readonly=True)
@@ -117,79 +118,68 @@ class TenderImport(models.Model):
             if record.contact_email and '@' not in record.contact_email:
                 raise ValidationError("Please enter a valid email address")
 
-    @api.onchange('excel_file')
-    def _onchange_excel_file(self):
-        """Automatically process file when uploaded"""
-        if self.excel_file:
-            try:
-                self.action_upload_file()
-            except Exception as e:
-                # Silently handle errors to prevent blocking the user
-                _logger.error(f"Auto-process failed: {str(e)}", exc_info=True)
+    @api.onchange('excel_files')
+    def _onchange_excel_files(self):
+        """When files are updated, reset the state to avoid confusion."""
+        # This is a UI helper. When the user changes the files, we clear the old preview.
+        self.preview_line_ids = [(5, 0, 0)]
+        self.write({
+            'state': 'preview', 'error_message': False, 'import_log': False,
+            'file_count': 0, 'total_rows': 0, 'parsed_count': 0,
+            'error_count': 0, 'imported_count': 0,
+        })
 
     def action_upload_file(self):
-        """Process uploaded Excel file - simplified version without logs"""
-        _logger.info("=== STARTING EXCEL UPLOAD PROCESS ===")
-        
-        # Clear previous state
-        self.preview_line_ids.unlink()
-        self.error_message = False
-        self.import_log = False
-        
-        # Validate file upload
-        if not self.excel_file:
-            raise UserError("Please upload an Excel file first.")
-        
-        if not self.filename:
-            raise UserError("Filename is required.")
-        
-        # Check pandas availability
-        if not PANDAS_AVAILABLE:
-            error_msg = "Required libraries not installed. Please install: pip install pandas openpyxl xlrd"
-            self.error_message = error_msg
-            self.state = 'error'
-            _logger.error(error_msg)
-            raise UserError(error_msg)
-        
-        try:
-            # Process the file
-            self._process_excel_file()
-            
-            # State is already preview by default
-            _logger.info("Excel processing completed successfully")
-            
-        except Exception as e:
-            self.state = 'error'
-            error_msg = f"Error processing Excel file: {str(e)}"
-            self.error_message = error_msg
-            _logger.error(f"Excel processing error: {e}", exc_info=True)
-            raise UserError(error_msg)
+        """Process uploaded Excel files and generate preview lines."""
+        self.ensure_one()
+        _logger.info("=== STARTING EXCEL UPLOAD PROCESS (MULTI-FILE) ===")
 
-    def _process_excel_file(self):
-        """Core Excel processing logic without logging to user"""
-        _logger.info("Starting Excel file processing")
+        if not self.excel_files:
+            raise UserError("Please upload one or more Excel files.")
+
+        if not PANDAS_AVAILABLE:
+            raise UserError("The 'pandas' and 'openpyxl' libraries are required. Please install them.")
+
+        all_preview_lines = []
+        log_messages = []
         
-        try:
-            # Decode the binary file
-            file_data = base64.b64decode(self.excel_file)
-            _logger.info(f"File decoded, size: {len(file_data)} bytes")
-            
-            # Read Excel file with multiple fallback methods
-            df = self._read_excel_file(file_data)
-            
-            # Validate DataFrame
-            if df is None or df.empty:
-                raise UserError("Excel file is empty or could not be read")
-            
-            _logger.info(f"Excel file loaded: {df.shape[0]} rows, {df.shape[1]} columns")
-            
-            # Process the data
-            self.total_rows = len(df)
-            self._parse_excel_data(df)
-            
-        except Exception as e:
-            _logger.error(f"Error in _process_excel_file: {e}", exc_info=True)
-            raise
+        # Reset counts before processing
+        self.write({'total_rows': 0, 'parsed_count': 0, 'error_count': 0})
+
+        for attachment in self.excel_files:
+            try:
+                file_data = base64.b64decode(attachment.datas)
+                df = self._read_excel_file(file_data)
+
+                if df is None or df.empty:
+                    log_messages.append(f"File '{attachment.name}' is empty or could not be read.")
+                    continue
+
+                preview_lines, stats = self._parse_excel_data(df)
+                all_preview_lines.extend(preview_lines)
+
+                # Aggregate stats
+                self.total_rows += len(df)
+                self.parsed_count += stats['successful_rows']
+                self.error_count += stats['error_rows']
+                log_messages.append(f"Successfully processed '{attachment.name}': {stats['successful_rows']} rows parsed.")
+            except Exception as e:
+                error_msg = f"Error processing file '{attachment.name}': {str(e)}"
+                _logger.error(error_msg, exc_info=True)
+                log_messages.append(error_msg)
+                self.error_count += 1
+        
+        self.file_count = len(self.excel_files)
+        self.import_log = '\n'.join(log_messages)
+        
+        if all_preview_lines:
+            self.preview_line_ids = all_preview_lines
+        
+        if self.error_count > 0:
+            self.state = 'error'
+            self.error_message = "Some files or rows could not be processed. See the import log for details."
+        else:
+            self.state = 'preview'
 
     def _read_excel_file(self, file_data):
         """Try multiple methods to read Excel file"""
@@ -257,13 +247,11 @@ class TenderImport(models.Model):
         raise UserError("Could not read Excel file. Please ensure it's a valid Excel file (.xlsx, .xls)")
 
     def _parse_excel_data(self, df):
-        """Parse Excel DataFrame and create preview lines"""
+        """Parse Excel DataFrame and return preview lines and stats."""
         _logger.info("Starting data parsing")
         
-        # Get column mappings
         column_mappings = self._get_column_mappings(df.columns)
         
-        # Process each row
         preview_lines = []
         successful_rows = 0
         error_rows = 0
@@ -271,15 +259,12 @@ class TenderImport(models.Model):
         
         for index, row in df.iterrows():
             try:
-                # Skip completely empty rows
                 if row.isna().all():
                     skipped_rows += 1
                     continue
                 
-                # Extract data from row
                 line_data = self._extract_row_data(row, column_mappings)
                 
-                # Validate extracted data
                 if self._validate_line_data(line_data):
                     preview_lines.append((0, 0, line_data))
                     successful_rows += 1
@@ -291,15 +276,15 @@ class TenderImport(models.Model):
                 error_rows += 1
                 _logger.error(f"Error processing row {index + 1}: {e}")
         
-        # Create preview lines
-        if preview_lines:
-            self.preview_line_ids = preview_lines
-        
-        # Update counts
-        self.parsed_count = successful_rows
-        self.error_count = error_rows
+        stats = {
+            'successful_rows': successful_rows,
+            'error_rows': error_rows,
+            'skipped_rows': skipped_rows,
+        }
         
         _logger.info(f"Parsing completed: {successful_rows} success, {error_rows} errors, {skipped_rows} skipped")
+
+        return preview_lines, stats
 
     def _get_column_mappings(self, columns):
         """Map Excel columns to tender fields"""
