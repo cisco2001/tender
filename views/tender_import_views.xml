@@ -33,10 +33,11 @@
                     <group>
                         <group name="file_upload">
                             <field name="institution_id"/>
-                            <field name="excel_file" filename="filename"/>
-                            <field name="filename" invisible="1"/>
+                            <!-- Updated for multiple file upload -->
+                            <field name="excel_files" widget="many2many_binary" string="Upload Excel Files"/>
                         </group>
                         <group name="statistics">
+                            <field name="file_count" readonly="1" string="Files Processed"/>
                             <field name="total_rows" readonly="1"/>
                             <field name="parsed_count" readonly="1"/>
                             <field name="imported_count" readonly="1"/>
@@ -103,7 +104,6 @@
         <field name="arch" type="xml">
             <search string="Search Imports">
                 <field name="name"/>
-                <field name="filename"/>
                 <separator/>
                 <filter string="Preview" name="preview" domain="[('state', '=', 'preview')]"/>
                 <filter string="Imported" name="imported" domain="[('state', '=', 'imported')]"/>
