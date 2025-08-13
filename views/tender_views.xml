@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Updated Tender Tree View -->
+    <record id="view_tender_tender_tree" model="ir.ui.view">
+        <field name="name">tender.tender.tree</field>
+        <field name="model">tender.tender</field>
+        <field name="arch" type="xml">
+            <tree decoration-info="is_it_related == True"
+                decoration-success="lead_id != False">
+                <field name="is_it_related" invisible="1"/>
+                <field name="lead_id" invisible="1"/>
+                
+                <field name="name" string="Tender No"/>
+                <field name="institution" string="Institution"/>
+                <field name="category_id" string="Category"/>
+                <field name="description" string="Description"/>
+                
+                <field name="lead_status" string="CRM Status" widget="badge" 
+                    decoration-success="lead_id != False" 
+                    decoration-muted="lead_id == False"/>
+                
+                <button name="action_convert_to_lead" 
+                        string="Convert to Lead" 
+                        type="object" 
+                        class="btn btn-primary btn-sm"
+                        help="Convert this tender to a CRM lead"
+                        attrs="{'invisible': [('lead_id', '!=', False)]}"/>
+                
+                <button name="action_convert_to_lead" 
+                        string="View Lead" 
+                        type="object" 
+                        class="btn btn-success btn-sm"
+                        help="View the linked CRM lead"
+                        attrs="{'invisible': [('lead_id', '=', False)]}"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Enhanced Tender Form View -->
+    <record id="view_tender_tender_form" model="ir.ui.view">
+        <field name="name">tender.tender.form</field>
+        <field name="model">tender.tender</field>
+        <field name="arch" type="xml">
+            <form string="Tender">
+                <header>
+                    <button name="action_set_review" string="Set to Review" type="object" 
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                    <button name="action_set_preparation" string="Start Preparation" type="object" 
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'review')]}"/>
+                    <button name="action_set_submitted" string="Mark as Submitted" type="object" 
+                            class="btn-primary" attrs="{'invisible': [('state', '!=', 'preparation')]}"/>
+                    <button name="action_set_awarded" string="Mark as Awarded" type="object" 
+                            class="btn-success" attrs="{'invisible': [('state', '!=', 'submitted')]}"/>
+                    <button name="action_set_lost" string="Mark as Lost" type="object" 
+                            class="btn-danger" attrs="{'invisible': [('state', '!=', 'submitted')]}"/>
+                    <button name="action_set_cancelled" string="Cancel" type="object" 
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,review,preparation,submitted,awarded"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_documents" type="object" class="oe_stat_button" icon="fa-file">
+                            <field name="document_count" widget="statinfo" string="Documents"/>
+                        </button>
+                        
+                        <button name="action_convert_to_lead" type="object" class="oe_stat_button" 
+                                attrs="{'invisible': [('lead_id', '!=', False)]}"
+                                help="Convert this tender to a CRM lead">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">Convert</span>
+                                <span class="o_stat_text">to Lead</span>
+                            </div>
+                        </button>
+                        
+                        <button name="action_convert_to_lead" type="object" class="oe_stat_button" 
+                                attrs="{'invisible': [('lead_id', '=', False)]}"
+                                help="View the linked CRM lead">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">View</span>
+                                <span class="o_stat_text">Lead</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-success" role="alert" 
+                         attrs="{'invisible': [('lead_id', '=', False)]}"
+                         style="margin-bottom: 20px;">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-check-circle fa-lg text-success me-2"></i>
+                            <div>
+                                <strong>Converted to CRM Lead</strong><br/>
+                                <small>This tender has been successfully converted to a CRM lead. 
+                                Status: <field name="lead_status" class="badge badge-success" readonly="1"/></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Tender Number"/>
+                        </h1>
+                        <h3>
+                            <field name="reference" placeholder="Reference Number"/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="institution"/>
+                            <field name="category_id"/>
+                            <field name="is_it_related" readonly="1"/>
+                            <field name="priority" widget="priority"/>
+                            <field name="stage_id"/>
+                        </group>
+                        <group>
+                            <field name="assigned_to"/>
+                            <field name="publication_date"/>
+                            <field name="deadline_date"/>
+                            <field name="days_remaining" readonly="1"/>
+                            <field name="lead_id" invisible="1"/>
+                            <field name="lead_status" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="estimated_value"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group string="Contact Information">
+                            <field name="contact_person"/>
+                            <field name="contact_email" widget="email" placeholder="e.g., contact@institution.com"/>
+                            <field name="contact_phone" widget="phone" placeholder="e.g., +255123456789"/>
+                            <field name="tender_url" widget="url"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" widget="html"/>
+                        </page>
+                        <page string="Team">
+                            <field name="team_members" widget="many2many_tags"/>
+                        </page>
+                        <page string="Internal Notes">
+                            <field name="internal_notes" placeholder="Add internal notes here..."/>
+                            <field name="keywords"/>
+                        </page>
+                        <page string="CRM Integration" attrs="{'invisible': [('lead_id', '=', False)]}">
+                            <div class="alert alert-info" role="alert">
+                                <strong>CRM Lead Information</strong><br/>
+                                This tender has been converted to a CRM lead for sales tracking.
+                            </div>
+                            <group>
+                                <group>
+                                    <label for="lead_id" string="Related Lead"/>
+                                    <div>
+                                        <field name="lead_id" readonly="1"/>
+                                        <button name="action_convert_to_lead" string="Open Lead" 
+                                                type="object" class="btn btn-sm btn-primary ms-2"/>
+                                    </div>
+                                    <field name="lead_status" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Enhanced Tender Kanban View -->
+    <record id="view_tender_tender_kanban" model="ir.ui.view">
+        <field name="name">tender.tender.kanban</field>
+        <field name="model">tender.tender</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage_id" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="assigned_to"/>
+                <field name="deadline_date"/>
+                <field name="days_remaining"/>
+                <field name="estimated_value"/>
+                <field name="priority"/>
+                <field name="is_it_related"/>
+                <field name="state"/>
+                <field name="stage_id"/>
+                <field name="lead_id"/>
+                <field name="lead_status"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click 
+                             #{record.days_remaining.raw_value &lt; 0 ? 'oe_kanban_card_danger' : ''}
+                             #{record.days_remaining.raw_value &lt; 7 and record.days_remaining.raw_value >= 0 ? 'oe_kanban_card_warning' : ''}
+                             #{record.lead_id.raw_value ? 'border-success' : ''}">
+                            
+                            <div t-if="record.lead_id.raw_value" class="ribbon ribbon-top-right">
+                                <span class="bg-success text-white px-2 py-1" style="font-size: 10px;">
+                                    CRM
+                                </span>
+                            </div>
+                            
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                    <div class="o_kanban_record_title">
+                                        <field name="priority" widget="priority"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div t-if="record.reference.raw_value">
+                                        <i class="fa fa-hashtag"/> <field name="reference"/>
+                                    </div>
+                                    <div t-if="record.estimated_value.raw_value">
+                                        <i class="fa fa-money"/> <field name="estimated_value"/>
+                                    </div>
+                                    <div t-if="record.is_it_related.raw_value" class="text-success">
+                                        <i class="fa fa-desktop"/> IT Related
+                                    </div>
+                                    <div t-if="record.lead_id.raw_value" class="text-success">
+                                        <field name="lead_status"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <div t-if="record.deadline_date.raw_value">
+                                            <i class="fa fa-clock-o"/> 
+                                            <field name="deadline_date"/>
+                                            (<field name="days_remaining"/> days)
+                                        </div>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <img t-att-src="kanban_image('res.users', 'avatar_128', record.assigned_to.raw_value)" 
+                                             t-att-title="record.assigned_to.value" 
+                                             t-att-alt="record.assigned_to.value" 
+                                             class="oe_kanban_avatar"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Calendar View -->
+    <record id="view_tender_tender_calendar" model="ir.ui.view">
+        <field name="name">tender.tender.calendar</field>
+        <field name="model">tender.tender</field>
+        <field name="arch" type="xml">
+            <calendar string="Tenders" date_start="deadline_date" color="priority" mode="month">
+                <field name="name"/>
+                <field name="assigned_to"/>
+                <field name="estimated_value"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_tender_tender_search" model="ir.ui.view">
+        <field name="name">tender.tender.search</field>
+        <field name="model">tender.tender</field>
+        <field name="arch" type="xml">
+            <search string="Search Tenders">
+                <field name="name"/>
+                <field name="reference"/>
+                <field name="institution"/>
+                <field name="assigned_to"/>
+                <field name="category_id"/>
+                <separator/>
+                <filter string="My Tenders" name="my_tenders" domain="[('assigned_to', '=', uid)]"/>
+                <filter string="IT Related" name="it_related" domain="[('is_it_related', '=', True)]"/>
+                <filter string="High Priority" name="high_priority" domain="[('priority', 'in', ['2', '3'])]"/>
+                <separator/>
+                <filter string="Converted to Leads" name="has_lead" domain="[('lead_id', '!=', False)]"/>
+                <filter string="Not Converted" name="no_lead" domain="[('lead_id', '=', False)]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Under Review" name="review" domain="[('state', '=', 'review')]"/>
+                <filter string="In Preparation" name="preparation" domain="[('state', '=', 'preparation')]"/>
+                <filter string="Submitted" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <separator/>
+                <filter string="Deadline This Week" name="deadline_week" 
+                        domain="[('deadline_date', '&gt;=', context_today().strftime('%Y-%m-%d')),
+                                ('deadline_date', '&lt;=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Overdue" name="overdue" domain="[('deadline_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Assigned To" name="group_assigned_to" context="{'group_by': 'assigned_to'}"/>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Institution" name="group_institution" context="{'group_by': 'institution'}"/>
+                    <filter string="CRM Status" name="group_lead_status" context="{'group_by': 'lead_status'}"/>
+                    <filter string="Deadline Month" name="group_deadline" context="{'group_by': 'deadline_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_tender_tender" model="ir.actions.act_window">
+        <field name="name">All Tenders</field>
+        <field name="res_model">tender.tender</field>
+        <field name="view_mode">kanban,tree,form,calendar</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first tender!
+            </p>
+            <p>
+                Upload Excel files with tender data and start managing your tender pipeline.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_tender_tender_my" model="ir.actions.act_window">
+        <field name="name">My Tenders</field>
+        <field name="res_model">tender.tender</field>
+        <field name="view_mode">kanban,tree,form,calendar</field>
+        <field name="context">{'search_default_my_tenders': 1}</field>
+    </record>
+
+    <record id="action_tender_tender_it" model="ir.actions.act_window">
+        <field name="name">IT Tenders</field>
+        <field name="res_model">tender.tender</field>
+        <field name="view_mode">kanban,tree,form,calendar</field>
+        <field name="context">{'search_default_it_related': 1}</field>
+    </record>
+
+    <record id="action_tender_tender_unconverted" model="ir.actions.act_window">
+        <field name="name">Tenders to Convert</field>
+        <field name="res_model">tender.tender</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_no_lead': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All tenders are converted to leads!
+            </p>
+            <p>
+                These are tenders that haven't been converted to CRM leads yet. 
+                Use the "Convert to Lead" button to create sales opportunities.
+            </p>
+        </field>
+    </record>
+
+    <!-- Category Views -->
+    <record id="view_tender_category_tree" model="ir.ui.view">
+        <field name="name">tender.category.tree</field>
+        <field name="model">tender.category</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="is_it_related"/>
+                <field name="keywords"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_tender_category_form" model="ir.ui.view">
+        <field name="name">tender.category.form</field>
+        <field name="model">tender.category</field>
+        <field name="arch" type="xml">
+            <form string="Tender Category">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="is_it_related"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="color" widget="color"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
+                        <field name="keywords" placeholder="keyword1, keyword2, keyword3"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_tender_category" model="ir.actions.act_window">
+        <field name="name">Tender Categories</field>
+        <field name="res_model">tender.category</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Stage Views -->
+    <record id="view_tender_stage_tree" model="ir.ui.view">
+        <field name="name">tender.stage.tree</field>
+        <field name="model">tender.stage</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="fold"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_tender_stage" model="ir.actions.act_window">
+        <field name="name">Tender Stages</field>
+        <field name="res_model">tender.stage</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_tender_tender_user,tender.tender.user,model_tender_tender,base.group_user,1,1,1,1
+access_tender_category_user,tender.category.user,model_tender_category,base.group_user,1,1,1,1
+access_tender_stage_user,tender.stage.user,model_tender_stage,base.group_user,1,1,1,1
+access_tender_import_user,tender.import.user,model_tender_import,base.group_user,1,1,1,1
+access_tender_import_line_user,tender.import.line.user,model_tender_import_line,base.group_user,1,1,1,1
+access_tender_tender_manager,tender.tender.manager,model_tender_tender,base.group_system,1,1,1,1
+access_tender_category_manager,tender.category.manager,model_tender_category,base.group_system,1,1,1,1
+access_tender_stage_manager,tender.stage.manager,model_tender_stage,base.group_system,1,1,1,1
+access_tender_import_manager,tender.import.manager,model_tender_import,base.group_system,1,1,1,1
+access_tender_import_line_manager,tender.import.line.manager,model_tender_import_line,base.group_system,1,1,1,1
+access_tender_to_lead_wizard,tender.to.lead.wizard,model_tender_to_lead_wizard,base.group_user,1,1,1,1

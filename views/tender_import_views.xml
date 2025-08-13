@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ONLY Modified: Tender Import Form View - Added contact fields -->
+    <record id="view_tender_import_form" model="ir.ui.view">
+        <field name="name">tender.import.form</field>
+        <field name="model">tender.import</field>
+        <field name="arch" type="xml">
+            <form string="Tender Import">
+                <header>
+                    <!-- Only show import button when in preview state -->
+                    <button name="action_import_selected" 
+                            string="Import Selected Tenders" 
+                            type="object" 
+                            class="oe_highlight"
+                            attrs="{'invisible': [('state', '!=', 'preview')]}"/>
+                    <button name="action_view_tenders" 
+                            string="View Imported Tenders" 
+                            type="object"
+                            attrs="{'invisible': [('state', '!=', 'imported')]}"/>
+                    
+                    <!-- Status bar with simplified states -->
+                    <field name="state" widget="statusbar" statusbar_visible="preview,imported" 
+                           attrs="{'invisible': [('state', '=', 'error')]}"/>
+                </header>
+                
+                <sheet>
+                    <!-- Title -->
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Import Name"/></h1>
+                    </div>
+                    
+                    <!-- Main fields -->
+                    <group>
+                        <group name="file_upload">
+                            <field name="institution_id"/>
+                            <field name="excel_file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                        <group name="statistics">
+                            <field name="total_rows" readonly="1"/>
+                            <field name="parsed_count" readonly="1"/>
+                            <field name="imported_count" readonly="1"/>
+                            <field name="error_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- NEW: Contact Information Section -->
+                    <group string="Contact Information">
+                        <group>
+                            <field name="contact_person" 
+                                   placeholder="e.g., John Doe - Procurement Officer"/>
+                            <field name="contact_email" 
+                                   placeholder="e.g., procurement@ministry.go.tz" 
+                                   widget="email"/>
+                        </group>
+                        <group>
+                            <field name="contact_phone" 
+                                   placeholder="e.g., +255 22 123 4567" 
+                                   widget="phone"/>
+                        </group>
+                    </group>
+
+                    <!-- Preview lines - UNCHANGED (uses original tree view) -->
+                    <field name="preview_line_ids" 
+                        attrs="{'invisible': [('state', '!=', 'preview')]}"/>
+                    
+                    <!-- Error Message - show when there are errors -->
+                    <group string="Error Details" attrs="{'invisible': [('error_message', '=', False)]}">
+                        <field name="error_message" widget="text" nolabel="1"/>
+                    </group>
+                </sheet>
+                
+                <!-- Chatter for activity tracking -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- UNCHANGED: Keep original tree view as is -->
+    <record id="view_tender_import_tree" model="ir.ui.view">
+        <field name="name">tender.import.tree</field>
+        <field name="model">tender.import</field>
+        <field name="arch" type="xml">
+            <tree decoration-success="state == 'imported'" 
+                decoration-danger="state == 'error'">
+                <field name="state" invisible="1"/>
+                <field name="name" string="Import Name"/>
+                <field name="create_date" string="Creation Date"/>
+                <field name="imported_count" string="Import Count"/>
+                <field name="institution_id" string="Institution"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- UNCHANGED: Keep original search view -->
+    <record id="view_tender_import_search" model="ir.ui.view">
+        <field name="name">tender.import.search</field>
+        <field name="model">tender.import</field>
+        <field name="arch" type="xml">
+            <search string="Search Imports">
+                <field name="name"/>
+                <field name="filename"/>
+                <separator/>
+                <filter string="Preview" name="preview" domain="[('state', '=', 'preview')]"/>
+                <filter string="Imported" name="imported" domain="[('state', '=', 'imported')]"/>
+                <filter string="Error" name="error" domain="[('state', '=', 'error')]"/>
+                <separator/>
+                <filter string="Today" name="today" 
+                        domain="[('create_date', '&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('create_date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Import Date" name="group_date" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- FIXED: Original preview tree view - ONLY removed email/phone columns -->
+    <record id="view_tender_import_line_tree" model="ir.ui.view">
+        <field name="name">tender.import.line.tree</field>
+        <field name="model">tender.import.line</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom" 
+                  decoration-info="is_it_related == True" 
+                  decoration-muted="is_it_related == False">
+                <field name="is_it_related" string="IT Related"/>
+                <field name="name" string="Tender Number"/>
+                <field name="description" string="Tender Description"/>
+                <!-- REMOVED: contact_email and contact_phone columns -->
+                <field name="category_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- UNCHANGED: Keep original actions -->
+    <record id="action_tender_import" model="ir.actions.act_window">
+        <field name="name">Tender Imports</field>
+        <field name="res_model">tender.import</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No imports yet!
+            </p>
+            <p>
+                Start by creating a new import to upload and process Excel files with tender data.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_tender_import_new" model="ir.actions.act_window">
+        <field name="name">New Tender Import</field>
+        <field name="res_model">tender.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'default_name': 'New Import'}</field>
+    </record>
+
+    <!-- NO MENU ITEMS HERE - They should be in menu_views.xml only -->
+</odoo>

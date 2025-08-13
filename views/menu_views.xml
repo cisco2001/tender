@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Menu -->
+    <menuitem id="menu_tender_main"
+              name="Tender Management"
+              sequence="10"
+              web_icon="tender_management,static/description/icon.png"/>
+
+    <!-- Import submenu - Place this BEFORE tender menu -->
+    <menuitem id="menu_tender_import_main" 
+              name="Import Tenders" 
+              parent="menu_tender_main" 
+              sequence="5"/>
+    
+    <!-- Import history -->
+    <menuitem id="menu_tender_import_history" 
+              name="Import History" 
+              parent="menu_tender_import_main" 
+              action="action_tender_import" 
+              sequence="10"/>
+
+    <!-- New import -->
+    <menuitem id="menu_tender_import_new" 
+              name="New Import" 
+              parent="menu_tender_import_main" 
+              action="action_tender_import_new" 
+              sequence="20"/>
+
+    <!-- Tender Menu -->
+    <menuitem id="menu_tender_tender"
+              name="Tenders"
+              parent="menu_tender_main"
+              sequence="10"/>
+
+    <menuitem id="menu_tender_tender_all"
+              name="All Tenders"
+              parent="menu_tender_tender"
+              action="action_tender_tender"
+              sequence="10"/>
+
+    <menuitem id="menu_tender_tender_my"
+              name="My Tenders"
+              parent="menu_tender_tender"
+              action="action_tender_tender_my"
+              sequence="20"/>
+
+    <menuitem id="menu_tender_tender_it"
+              name="IT Tenders"
+              parent="menu_tender_tender"
+              action="action_tender_tender_it"
+              sequence="30"/>
+
+    <menuitem id="menu_tender_tender_unconverted"
+              name="Tenders to Convert"
+              parent="menu_tender_tender"
+              action="action_tender_tender_unconverted"
+              sequence="40"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_tender_config"
+              name="Configuration"
+              parent="menu_tender_main"
+              sequence="100"/>
+
+    <menuitem id="menu_tender_category"
+              name="Categories"
+              parent="menu_tender_config"
+              action="action_tender_category"
+              sequence="10"/>
+
+    <menuitem id="menu_tender_stage"
+              name="Stages"
+              parent="menu_tender_config"
+              action="action_tender_stage"
+              sequence="20"/>
+</odoo>

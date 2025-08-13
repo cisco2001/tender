@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Categories -->
+        <record id="category_software" model="tender.category">
+            <field name="name">Software Development</field>
+            <field name="code">SW_DEV</field>
+            <field name="description">Software development and programming services</field>
+            <field name="keywords">software,development,programming,coding,application,system,web,mobile</field>
+            <field name="is_it_related">1</field>
+            <field name="color">1</field>
+        </record>
+
+        <record id="category_network" model="tender.category">
+            <field name="name">Network Infrastructure</field>
+            <field name="code">NETWORK</field>
+            <field name="description">Network equipment and infrastructure</field>
+            <field name="keywords">network,router,switch,firewall,wifi,lan,wan,infrastructure</field>
+            <field name="is_it_related">1</field>
+            <field name="color">2</field>
+        </record>
+
+        <record id="category_hardware" model="tender.category">
+            <field name="name">Hardware  Equipment</field>
+            <field name="code">HARDWARE</field>
+            <field name="description">Computer hardware and IT equipment</field>
+            <field name="keywords">computer,laptop,server,hardware,equipment,desktop,printer</field>
+            <field name="is_it_related">1</field>
+            <field name="color">3</field>
+        </record>
+
+        <record id="category_cloud" model="tender.category">
+            <field name="name">Cloud Services</field>
+            <field name="code">CLOUD</field>
+            <field name="description">Cloud computing and hosting services</field>
+            <field name="keywords">cloud,hosting,saas,paas,iaas,aws,azure,google cloud</field>
+            <field name="is_it_related">1</field>
+            <field name="color">4</field>
+        </record>
+
+        <record id="category_security" model="tender.category">
+            <field name="name">Cybersecurity</field>
+            <field name="code">SECURITY</field>
+            <field name="description">Security software and services</field>
+            <field name="keywords">security,cybersecurity,antivirus,encryption,firewall,protection</field>
+            <field name="is_it_related">1</field>
+            <field name="color">5</field>
+        </record>
+
+        <record id="category_general" model="tender.category">
+            <field name="name">General Services</field>
+            <field name="code">GENERAL</field>
+            <field name="description">Non-IT related services</field>
+            <field name="keywords">consulting,training,maintenance,support,general</field>
+            <field name="is_it_related">0</field>
+            <field name="color">6</field>
+        </record>
+
+        <!-- Default Stages -->
+        <record id="stage_new" model="tender.stage">
+            <field name="name">New</field>
+            <field name="sequence">1</field>
+            <field name="description">Newly imported tenders</field>
+        </record>
+
+        <record id="stage_analysis" model="tender.stage">
+            <field name="name">Analysis</field>
+            <field name="sequence">2</field>
+            <field name="description">Under analysis</field>
+        </record>
+
+        <record id="stage_preparation" model="tender.stage">
+            <field name="name">Preparation</field>
+            <field name="sequence">3</field>
+            <field name="description">Preparing proposal</field>
+        </record>
+
+        <record id="stage_review" model="tender.stage">
+            <field name="name">Review</field>
+            <field name="sequence">4</field>
+            <field name="description">Internal review</field>
+        </record>
+
+        <record id="stage_submitted" model="tender.stage">
+            <field name="name">Submitted</field>
+            <field name="sequence">5</field>
+            <field name="description">Proposal submitted</field>
+        </record>
+
+        <record id="stage_won" model="tender.stage">
+            <field name="name">Won</field>
+            <field name="sequence">6</field>
+            <field name="description">Tender won</field>
+            <field name="fold">1</field>
+        </record>
+
+        <record id="stage_lost" model="tender.stage">
+            <field name="name">Lost</field>
+            <field name="sequence">7</field>
+            <field name="description">Tender lost</field>
+            <field name="fold">1</field>
+        </record>
+    </data>
+</odoo>
